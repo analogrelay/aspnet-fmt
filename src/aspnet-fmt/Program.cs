@@ -4,6 +4,7 @@ using System.Linq;
 using System.Collections.Generic;
 using AspNetFormatter.Rules;
 using Microsoft.Extensions.CommandLineUtils;
+using System.Diagnostics;
 
 namespace AspNetFormatter
 {
@@ -11,11 +12,21 @@ namespace AspNetFormatter
     {
         private static readonly HashSet<string> ExcludedDirectories = new HashSet<string>()
         {
-            ".git"
+            ".git",
+            "bin",
+            "obj"
         };
 
         public static int Main(string[] args)
         {
+            if (args.Any(a => a == "--debug"))
+            {
+                Console.WriteLine($"Waiting for debugger. Process ID: {Process.GetCurrentProcess().Id}");
+                Console.WriteLine("Press ENTER to resume execution");
+                Console.ReadLine();
+                args = args.Where(a => a != "--debug").ToArray();
+            }
+
             var app = new CommandLineApplication();
             app.Name = "aspnet-fmt";
             app.FullName = "ASP.NET Code Formatter";
@@ -60,7 +71,7 @@ namespace AspNetFormatter
 
         private static bool ProcessDir(string path, bool fix, IEnumerable<FormattingRule> rules)
         {
-            if(ExcludedDirectories.Contains(Path.GetFileName(path)))
+            if (ExcludedDirectories.Contains(Path.GetFileName(path)))
             {
                 Console.WriteLine($"* Excluded directory {path}.");
                 return true;
